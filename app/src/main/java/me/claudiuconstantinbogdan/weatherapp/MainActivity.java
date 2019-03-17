@@ -3,6 +3,7 @@ package me.claudiuconstantinbogdan.weatherapp;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
 
@@ -17,10 +18,13 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
 
+    TextView textView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        textView = findViewById(R.id.helloText);
         testOkHTTP();
     }
 
@@ -51,6 +55,10 @@ public class MainActivity extends AppCompatActivity {
                 WeatherData weatherData = gson.fromJson(weatherJsonData, WeatherData.class);
                 Log.d("OKHTTP", gson.toJson(weatherData));
                 Log.d("OKHTTP", response.toString());
+
+                runOnUiThread(() -> {
+                    textView.setText(gson.toJson(weatherData)); // Stuff that updates the UI
+                });
             }
         });
     }
