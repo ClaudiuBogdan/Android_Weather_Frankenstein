@@ -36,13 +36,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textView = findViewById(R.id.helloText);
-        testOkHTTP();
         getUserLocation();
     }
 
-    private void testOkHTTP() {
+    private void testOkHTTP(double longitude, double latitude, String cityName) {
         try {
-            run("https://api.darksky.net/forecast/2bb07c3bece89caf533ac9a5d23d8417/59.337239,18.062381");
+            run("https://api.darksky.net/forecast/2bb07c3bece89caf533ac9a5d23d8417/" + longitude +"," + latitude,
+                    longitude, latitude, cityName);
         } catch (IOException ex) {
         }
 
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     OkHttpClient client = new OkHttpClient();
     Gson gson = new Gson();
 
-    private void run(String url) throws IOException {
+    private void run(String url, double longitude, double latitude, String cityName) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -70,7 +70,10 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("OKHTTP", response.toString());
 
                 runOnUiThread(() -> {
-//                    textView.setText(gson.toJson(weatherData)); // Stuff that updates the UI
+
+                    String s = longitude + "\n" + latitude + "\n\nMy Current City is: "
+                            + cityName + "\n" + "Temperature: " + weatherData.getCurrently().getTemperature();
+                    textView.setText(s);
                 });
             }
         });
@@ -132,9 +135,8 @@ public class MainActivity extends AppCompatActivity {
                     getBaseContext(),
                     "Location changed: Lat: " + loc.getLatitude() + " Lng: "
                             + loc.getLongitude(), Toast.LENGTH_SHORT).show();
-            String longitude = "Longitude: " + loc.getLongitude();
-
-            String latitude = "Latitude: " + loc.getLatitude();
+            double longitude = loc.getLongitude();
+            double latitude = loc.getLatitude();
 
             /*------- To get city name from coordinates -------- */
             String cityName = null;
@@ -151,9 +153,9 @@ public class MainActivity extends AppCompatActivity {
             catch (IOException e) {
                 e.printStackTrace();
             }
-            String s = longitude + "\n" + latitude + "\n\nMy Current City is: "
-                    + cityName;
-            textView.setText(s);
+
+
+            testOkHTTP(latitude, longitude, cityName);
         }
 
         @Override
