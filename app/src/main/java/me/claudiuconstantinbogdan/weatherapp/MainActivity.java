@@ -4,8 +4,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
 import java.io.IOException;
 
+import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -30,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     OkHttpClient client = new OkHttpClient();
-
+    Gson gson = new Gson();
     private void  run(String url) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
@@ -44,7 +47,9 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                Log.d("OKHTTP", response.body().string());
+                String weatherJsonData = response.body().string();
+                WeatherData weatherData = gson.fromJson(weatherJsonData, WeatherData.class);
+                Log.d("OKHTTP", gson.toJson(weatherData));
                 Log.d("OKHTTP", response.toString());
             }
         });
