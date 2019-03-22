@@ -1,8 +1,10 @@
 package me.claudiuconstantinbogdan.weatherapp;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -21,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 
 import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
+import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDataContract;
+import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbHelper;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -65,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 String weatherJsonData = response.body().string();
+                saveDataIntoDatabase(weatherJsonData);
                 WeatherData weatherData = gson.fromJson(weatherJsonData, WeatherData.class);
                 Log.d("OKHTTP", gson.toJson(weatherData));
                 Log.d("OKHTTP", response.toString());
@@ -166,5 +171,20 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {}
+    }
+
+    private WeatherDbHelper dbHelper;
+    private void saveDataIntoDatabase(String jsonString){
+        if(dbHelper == null)
+            dbHelper = new WeatherDbHelper(this);
+        // Gets the data repository in write mode
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+// Create a new map of values, where column names are the keys
+        ContentValues values = new ContentValues();
+        values.put(WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA, jsonString);
+
+// Insert the new row, returning the primary key value of the new row
+        long newRowId = db.insert(WeatherDataContract.WeatherDataEntry.TABLE_NAME, null, values);
     }
 }

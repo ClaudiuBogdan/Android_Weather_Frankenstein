@@ -10,3 +10,5 @@ TODO 10: Check if the location is on and prompt message to enable location.
 TODO 6: Create a background service that notify if there is any weather alert.
 TODO 8: Have a refresh button to fetch weather conditions.
 
+TODO 3: Save data to local storage if no internet available.
+Store JSON response into the database.
