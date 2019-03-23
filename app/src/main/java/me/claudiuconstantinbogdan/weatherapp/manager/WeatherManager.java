@@ -31,6 +31,8 @@ import okhttp3.Response;
 
 public class WeatherManager {
 
+    public static final String TAG = WeatherManager.class.getCanonicalName();
+
     private Context mContext;
     private IWeatherListener mWeatherListener;
     private LocationManager mLocationManager;

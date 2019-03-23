@@ -56,7 +56,20 @@ public class MainActivity extends AppCompatActivity implements IWeatherListener 
 
         registerNetworkBroadcastForNougat();
         getUserLocation();
+
+        if(savedInstanceState != null){
+            String weatherData = savedInstanceState.getString(weatherDataSaveKey);
+            textView.setText(weatherData);
+        }
+
         //startTimer(this);
+    }
+
+    private final String weatherDataSaveKey = "weatherDataSaveKey";
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(weatherDataSaveKey, textView.getText().toString());
     }
 
     @Override
