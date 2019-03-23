@@ -33,6 +33,8 @@ public class WeatherManager {
 
     private Context mContext;
     private IWeatherListener mWeatherListener;
+    private LocationManager mLocationManager;
+    private LocationListener mLocationListener;
 
     public WeatherManager(Context context, IWeatherListener weatherListener){
         this.mContext = context;
@@ -42,11 +44,11 @@ public class WeatherManager {
     public void initLocationListener() throws SecurityException{
         String data = loadDataFromDatabase();
         postWeatherData(data);
-        LocationManager locationManager = (LocationManager)
+        mLocationManager = (LocationManager)
                 mContext.getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new MyLocationListener();
-        locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
+        mLocationListener = new MyLocationListener();
+        mLocationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, 5000, 10, mLocationListener);
     }
 
     /*---------- Listener class to get coordinates ------------- */
@@ -194,9 +196,12 @@ public class WeatherManager {
     }
 
     public void destroy(){
-        mContext = null;
-        mWeatherListener = null;
         dbHelper.close();
         cancelAllRequest();
+        mLocationManager.removeUpdates(mLocationListener);
+        mContext = null;
+        mWeatherListener = null;
+        mLocationManager = null;
+        mLocationListener = null;
     }
 }
