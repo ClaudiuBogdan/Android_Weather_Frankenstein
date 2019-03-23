@@ -80,9 +80,7 @@ public class MainActivity extends AppCompatActivity implements IWeatherListener 
 
     @Override
     public void onWeatherUpdate(String weatherData) {
-        runOnUiThread(() -> {
-            textView.setText(weatherData);
-        });
+        runOnUiThread(() -> textView.setText(weatherData));
 
     }
 

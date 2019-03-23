@@ -44,7 +44,8 @@ public class WeatherManager {
     }
 
     public void initLocationListener() throws SecurityException{
-        startHandlerThread();
+        startNetworkHandlerThread();
+        startDatabaseHandlerThread();
         loadDataFromDatabase();
         mLocationManager = (LocationManager)
                 mContext.getSystemService(Context.LOCATION_SERVICE);
@@ -81,12 +82,12 @@ public class WeatherManager {
     OkHttpClient client = new OkHttpClient();
     Gson gson = new Gson();
 
-    private Handler mHandler = null;
-    private HandlerThread mHandlerThread = null;
-    public void startHandlerThread(){
-        mHandlerThread = new HandlerThread("HandlerThread");
-        mHandlerThread.start();
-        mHandler = new Handler(mHandlerThread.getLooper());
+    private Handler mNetworkHandler = null;
+    private HandlerThread mNetworkHandlerThread = null;
+    public void startNetworkHandlerThread(){
+        mNetworkHandlerThread = new HandlerThread("NetworkHandlerThread");
+        mNetworkHandlerThread.start();
+        mNetworkHandler = new Handler(mNetworkHandlerThread.getLooper());
     }
 
     private void fetchWeatherDataFromNetwork(double longitude, double latitude){
@@ -118,7 +119,7 @@ public class WeatherManager {
             }
         };
         // Start the initial runnable task by posting through the handler
-        mHandler.post(runnable);
+        mNetworkHandler.post(runnable);
     }
 
 
@@ -164,6 +165,14 @@ public class WeatherManager {
         long newRowId = db.insert(WeatherDataContract.WeatherDataEntry.TABLE_NAME, null, values);
     }
 
+    private Handler mDatabaseHandler = null;
+    private HandlerThread mDatabaseHandlerThread = null;
+    public void startDatabaseHandlerThread(){
+        mDatabaseHandlerThread = new HandlerThread("HandlerThread");
+        mDatabaseHandlerThread.start();
+        mDatabaseHandler = new Handler(mNetworkHandlerThread.getLooper());
+    }
+
     private void  loadDataFromDatabase(){
         if(dbHelper == null)
             dbHelper = new WeatherDbHelper(mContext);
@@ -194,7 +203,7 @@ public class WeatherManager {
             if(!isUIBlocked)
                 postWeatherData(data);
         };
-        mHandler.post(runnable);
+        mDatabaseHandler.post(runnable);
     }
 
     private boolean isUIBlocked = false;
@@ -202,7 +211,7 @@ public class WeatherManager {
         isUIBlocked = true;
     }
 
-    private void cancelAllRequest(){
+    private void cancelNetworkRequests(){
         //When you want to cancel:
         //A) go through the queued calls and cancel if the tag matches:
         for (Call call : client.dispatcher().queuedCalls()) {
@@ -216,10 +225,18 @@ public class WeatherManager {
     }
 
     public void destroy(){
+        cancelNetworkRequests();
         dbHelper.close();
-        cancelAllRequest();
         mLocationManager.removeUpdates(mLocationListener);
-        mHandler.removeCallbacksAndMessages(null);
+        mNetworkHandler.removeCallbacksAndMessages(null);
+        mDatabaseHandler.removeCallbacksAndMessages(null);
+        mNetworkHandlerThread.quit();
+        mDatabaseHandlerThread.quit();
+
+        mNetworkHandler = null;
+        mDatabaseHandler = null;
+        mNetworkHandlerThread = null;
+        mDatabaseHandlerThread = null;
         mContext = null;
         mWeatherListener = null;
         mLocationManager = null;
