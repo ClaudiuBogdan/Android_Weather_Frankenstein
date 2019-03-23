@@ -51,9 +51,11 @@ public class MainActivity extends AppCompatActivity implements IWeatherListener 
         //startTimer(this);
     }
 
-
-
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        weatherManager.destroy();
+    }
 
     @Override
     public void onWeatherUpdate(String weatherData) {
@@ -69,21 +71,6 @@ public class MainActivity extends AppCompatActivity implements IWeatherListener 
     }
 
 
-
-    private WeatherDbHelper dbHelper;
-    private void saveDataIntoDatabase(String jsonString){
-        if(dbHelper == null)
-            dbHelper = new WeatherDbHelper(this);
-        // Gets the data repository in write mode
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-// Create a new map of values, where column names are the keys
-        ContentValues values = new ContentValues();
-        values.put(WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA, jsonString);
-
-// Insert the new row, returning the primary key value of the new row
-        long newRowId = db.insert(WeatherDataContract.WeatherDataEntry.TABLE_NAME, null, values);
-    }
 
     public static int counter = 0;
     public static Observable observable = new Observable();
