@@ -91,31 +91,23 @@ public class WeatherManager {
     }
 
     private void fetchWeatherDataFromNetwork(double longitude, double latitude){
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    runNetworkRequest("https://api.darksky.net/forecast/2bb07c3bece89caf533ac9a5d23d8417/" + longitude +"," + latitude,
-                            longitude, latitude);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            private String runNetworkRequest(String url, double longitude, double latitude) throws IOException {
+        Runnable runnable = () -> {
+            try {
+                String url = "https://api.darksky.net/forecast/2bb07c3bece89caf533ac9a5d23d8417/" + longitude +"," + latitude;
                 Request request = new Request.Builder()
                         .url(url)
                         .build();
 
-                try (Response response = client.newCall(request).execute()) {
-                    String weatherJsonData = response.body().string();
+                Response response = client.newCall(request).execute();
+                String weatherJsonData = response.body().string();
 
-                    blockDatabaseLoadToUI();
-                    postWeatherData(weatherJsonData);
-                    saveDataIntoDatabase(weatherJsonData);
+                blockDatabaseLoadToUI();
+                postWeatherData(weatherJsonData);
+                saveDataIntoDatabase(weatherJsonData);
 
-                    return weatherJsonData;
-                }
+            } catch (IOException e) {
+                //Display error message
+                e.printStackTrace();
             }
         };
         // Start the initial runnable task by posting through the handler
@@ -124,6 +116,7 @@ public class WeatherManager {
 
 
 
+    //TODO: Move to a background thread
     private void postWeatherData(String weatherJsonData){
         WeatherData weatherData = gson.fromJson(weatherJsonData, WeatherData.class);
 
