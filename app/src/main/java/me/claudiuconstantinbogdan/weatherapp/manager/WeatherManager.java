@@ -10,7 +10,8 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -24,7 +25,6 @@ import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDataContract;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbHelper;
 import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -44,8 +44,8 @@ public class WeatherManager {
     }
 
     public void initLocationListener() throws SecurityException{
-        String data = loadDataFromDatabase();
-        postWeatherData(data);
+        startHandlerThread();
+        loadDataFromDatabase();
         mLocationManager = (LocationManager)
                 mContext.getSystemService(Context.LOCATION_SERVICE);
         mLocationListener = new MyLocationListener();
@@ -58,7 +58,6 @@ public class WeatherManager {
 
         @Override
         public void onLocationChanged(Location loc) {
-//            textView.setText("");
             Toast.makeText(
                     mContext,
                     "Location changed: Lat: " + loc.getLatitude() + " Lng: "
@@ -66,9 +65,7 @@ public class WeatherManager {
             double longitude = loc.getLongitude();
             double latitude = loc.getLatitude();
 
-
-
-            testOkHTTP(latitude, longitude);
+            fetchWeatherDataFromNetwork(latitude, longitude);
         }
 
         @Override
@@ -81,37 +78,50 @@ public class WeatherManager {
         public void onStatusChanged(String provider, int status, Bundle extras) {}
     }
 
-    private void testOkHTTP(double longitude, double latitude) {
-        try {
-            run("https://api.darksky.net/forecast/2bb07c3bece89caf533ac9a5d23d8417/" + longitude +"," + latitude,
-                    longitude, latitude);
-        } catch (IOException ex) {
-        }
-
-    }
-
     OkHttpClient client = new OkHttpClient();
     Gson gson = new Gson();
 
-    private void run(String url, double longitude, double latitude) throws IOException {
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.d("OKHTTP", "Error: " + e.toString());
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String weatherJsonData = response.body().string();
-                saveDataIntoDatabase(weatherJsonData);
-                postWeatherData(weatherJsonData);
-            }
-        });
+    private Handler mHandler = null;
+    private HandlerThread mHandlerThread = null;
+    public void startHandlerThread(){
+        mHandlerThread = new HandlerThread("HandlerThread");
+        mHandlerThread.start();
+        mHandler = new Handler(mHandlerThread.getLooper());
     }
+
+    private void fetchWeatherDataFromNetwork(double longitude, double latitude){
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    runNetworkRequest("https://api.darksky.net/forecast/2bb07c3bece89caf533ac9a5d23d8417/" + longitude +"," + latitude,
+                            longitude, latitude);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            private String runNetworkRequest(String url, double longitude, double latitude) throws IOException {
+                Request request = new Request.Builder()
+                        .url(url)
+                        .build();
+
+                try (Response response = client.newCall(request).execute()) {
+                    String weatherJsonData = response.body().string();
+
+                    blockDatabaseLoadToUI();
+                    postWeatherData(weatherJsonData);
+                    saveDataIntoDatabase(weatherJsonData);
+
+                    return weatherJsonData;
+                }
+            }
+        };
+        // Start the initial runnable task by posting through the handler
+        mHandler.post(runnable);
+    }
+
+
 
     private void postWeatherData(String weatherJsonData){
         WeatherData weatherData = gson.fromJson(weatherJsonData, WeatherData.class);
@@ -154,34 +164,42 @@ public class WeatherManager {
         long newRowId = db.insert(WeatherDataContract.WeatherDataEntry.TABLE_NAME, null, values);
     }
 
-    private String  loadDataFromDatabase(){
+    private void  loadDataFromDatabase(){
         if(dbHelper == null)
             dbHelper = new WeatherDbHelper(mContext);
+        Runnable runnable = () -> {
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+            // Define a projection that specifies which columns from the database
+            // you will actually use after this query.
+            String[] projection = {
+                    WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA
+            };
 
-        // Define a projection that specifies which columns from the database
-        // you will actually use after this query.
-        String[] projection = {
-                WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA
+
+            Cursor cursor = db.query(
+                    WeatherDataContract.WeatherDataEntry.TABLE_NAME,   // The table to query
+                    projection,             // The array of columns to return (pass null to get all)
+                    null,              // The columns for the WHERE clause
+                    null,          // The values for the WHERE clause
+                    null,                   // don't group the rows
+                    null,                   // don't filter by row groups
+                    null               // The sort order
+            );
+            cursor.moveToNext();
+
+            String data = cursor.getString(
+                    cursor.getColumnIndexOrThrow(WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA));
+            cursor.close();
+            if(!isUIBlocked)
+                postWeatherData(data);
         };
+        mHandler.post(runnable);
+    }
 
-
-        Cursor cursor = db.query(
-                WeatherDataContract.WeatherDataEntry.TABLE_NAME,   // The table to query
-                projection,             // The array of columns to return (pass null to get all)
-                null,              // The columns for the WHERE clause
-                null,          // The values for the WHERE clause
-                null,                   // don't group the rows
-                null,                   // don't filter by row groups
-                null               // The sort order
-        );
-        cursor.moveToNext();
-
-        String data = cursor.getString(
-                cursor.getColumnIndexOrThrow(WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA));
-        cursor.close();
-        return  data;
+    private boolean isUIBlocked = false;
+    private void blockDatabaseLoadToUI(){
+        isUIBlocked = true;
     }
 
     private void cancelAllRequest(){
@@ -201,6 +219,7 @@ public class WeatherManager {
         dbHelper.close();
         cancelAllRequest();
         mLocationManager.removeUpdates(mLocationListener);
+        mHandler.removeCallbacksAndMessages(null);
         mContext = null;
         mWeatherListener = null;
         mLocationManager = null;

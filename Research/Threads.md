@@ -11,3 +11,9 @@ Source: https://developer.android.com/training/best-background
 
 ## Looper, handler and handlerthread
 Source: https://blog.mindorks.com/android-core-looper-handler-and-handlerthread-bd54d69fe91a
+
+## Run handlerin a background thread 
+
+Creating a handler from the UI thread will inherit the same thread. To create a handler from the background thread is necessary to create a HandlerThread and get its thread ( .getLooper()) when creating the handler.
+
+Source: https://stackoverflow.com/questions/18694732/run-handler-messages-in-a-background-thread
