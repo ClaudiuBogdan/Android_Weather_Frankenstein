@@ -3,6 +3,7 @@ package me.claudiuconstantinbogdan.weatherapp.activities;
 import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Address;
@@ -10,6 +11,8 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.os.Build;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -28,6 +31,7 @@ import me.claudiuconstantinbogdan.weatherapp.R;
 import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
 import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
 import me.claudiuconstantinbogdan.weatherapp.manager.WeatherManager;
+import me.claudiuconstantinbogdan.weatherapp.receiver.NetworkChangeReceiver;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDataContract;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbHelper;
 import okhttp3.Call;
@@ -40,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements IWeatherListener 
 
     private TextView textView;
     private WeatherManager weatherManager;
+    private NetworkChangeReceiver mNetworkReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +52,9 @@ public class MainActivity extends AppCompatActivity implements IWeatherListener 
         setContentView(R.layout.activity_main);
         textView = findViewById(R.id.helloText);
         weatherManager = new WeatherManager(this, this);
+        mNetworkReceiver = new NetworkChangeReceiver();
+
+        registerNetworkBroadcastForNougat();
         getUserLocation();
         //startTimer(this);
     }
@@ -55,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements IWeatherListener 
     protected void onDestroy() {
         super.onDestroy();
         weatherManager.destroy();
+        unregisterNetworkChanges();
     }
 
     @Override
@@ -128,6 +137,23 @@ public class MainActivity extends AppCompatActivity implements IWeatherListener 
 
             // other 'case' lines to check for other
             // permissions this app might request.
+        }
+    }
+
+    private void registerNetworkBroadcastForNougat() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            registerReceiver(mNetworkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            registerReceiver(mNetworkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        }
+    }
+
+    protected void unregisterNetworkChanges() {
+        try {
+            unregisterReceiver(mNetworkReceiver);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
         }
     }
 }
