@@ -42,11 +42,11 @@ public class WeatherManager {
     public void initLocationListener() throws SecurityException{
         String data = loadDataFromDatabase();
         postWeatherData(data);
-//        LocationManager locationManager = (LocationManager)
-//                mContext.getSystemService(Context.LOCATION_SERVICE);
-//        LocationListener locationListener = new MyLocationListener();
-//        locationManager.requestLocationUpdates(
-//                LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
+        LocationManager locationManager = (LocationManager)
+                mContext.getSystemService(Context.LOCATION_SERVICE);
+        LocationListener locationListener = new MyLocationListener();
+        locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
     }
 
     /*---------- Listener class to get coordinates ------------- */
@@ -103,7 +103,7 @@ public class WeatherManager {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 String weatherJsonData = response.body().string();
-                //saveDataIntoDatabase(weatherJsonData);
+                saveDataIntoDatabase(weatherJsonData);
                 postWeatherData(weatherJsonData);
             }
         });
@@ -140,6 +140,7 @@ public class WeatherManager {
             dbHelper = new WeatherDbHelper(mContext);
         // Gets the data repository in write mode
         SQLiteDatabase db = dbHelper.getWritableDatabase();
+        dbHelper.deleteAll(db);
 
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
