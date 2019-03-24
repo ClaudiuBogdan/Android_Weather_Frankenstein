@@ -122,7 +122,7 @@ public class WeatherManager {
     }
 
 
-    Gson gson = new Gson();
+    private Gson gson = new Gson();
 
     @WorkerThread
     private void postWeatherData(String weatherJsonData){
