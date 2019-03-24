@@ -29,6 +29,7 @@ import me.claudiuconstantinbogdan.weatherapp.network.WeatherService;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDataContract;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbHelper;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbManager;
+import me.claudiuconstantinbogdan.weatherapp.util.GeocodeUtil;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -126,22 +127,14 @@ public class WeatherManager {
     @WorkerThread
     private void postWeatherData(String weatherJsonData){
         WeatherData weatherData = gson.fromJson(weatherJsonData, WeatherData.class);
+        String cityName = "None";
+        try{
+            cityName = GeocodeUtil.getLocationName(mContext, weatherData.getLongitude(), weatherData.getLatitude());
+        }
+        catch (IOException ex){
+            ex.printStackTrace();
+        }
 
-        /*------- To get city name from coordinates -------- */
-        String cityName = null;
-        Geocoder gcd = new Geocoder(mContext, Locale.getDefault());
-        List<Address> addresses;
-        try {
-            addresses = gcd.getFromLocation(weatherData.getLatitude(),
-                    weatherData.getLongitude(), 1);
-            if (addresses.size() > 0) {
-                System.out.println(addresses.get(0).getLocality());
-                cityName = addresses.get(0).getLocality();
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
 
 
         String s = weatherData.getLongitude() + "\n" + weatherData.getLatitude() + "\n\nMy Current City is: "
