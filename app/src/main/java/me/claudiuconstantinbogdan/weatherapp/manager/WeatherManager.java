@@ -12,6 +12,9 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.support.annotation.MainThread;
+import android.support.annotation.UiThread;
+import android.support.annotation.WorkerThread;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -22,6 +25,7 @@ import java.util.Locale;
 
 import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
 import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
+import me.claudiuconstantinbogdan.weatherapp.network.WeatherService;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDataContract;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbHelper;
 import okhttp3.Call;
@@ -37,10 +41,14 @@ public class WeatherManager {
     private IWeatherListener mWeatherListener;
     private LocationManager mLocationManager;
     private LocationListener mLocationListener;
+    private NetworkManager mNetworkManager;
+    private WeatherService mWeatherService;
 
     public WeatherManager(Context context, IWeatherListener weatherListener){
         this.mContext = context;
         this.mWeatherListener = weatherListener;
+        this.mNetworkManager = NetworkManager.getInstance();
+        this.mWeatherService = NetworkManager.getWeatherService();
     }
 
     public void initLocationListener() throws SecurityException{
@@ -57,6 +65,7 @@ public class WeatherManager {
     /*---------- Listener class to get coordinates ------------- */
     private class MyLocationListener implements LocationListener {
 
+        @MainThread
         @Override
         public void onLocationChanged(Location loc) {
             Toast.makeText(
@@ -79,8 +88,7 @@ public class WeatherManager {
         public void onStatusChanged(String provider, int status, Bundle extras) {}
     }
 
-    OkHttpClient client = new OkHttpClient();
-    Gson gson = new Gson();
+
 
     private Handler mNetworkHandler = null;
     private HandlerThread mNetworkHandlerThread = null;
@@ -90,17 +98,12 @@ public class WeatherManager {
         mNetworkHandler = new Handler(mNetworkHandlerThread.getLooper());
     }
 
+
+    @MainThread
     private void fetchWeatherDataFromNetwork(double longitude, double latitude){
-        Runnable runnable = () -> {
+        Runnable runnable =  ()-> {
             try {
-                String url = "https://api.darksky.net/forecast/2bb07c3bece89caf533ac9a5d23d8417/" + longitude +"," + latitude;
-                Request request = new Request.Builder()
-                        .url(url)
-                        .build();
-
-                Response response = client.newCall(request).execute();
-                String weatherJsonData = response.body().string();
-
+                String weatherJsonData = mWeatherService.getWeatherData(longitude, latitude);
                 blockDatabaseLoadToUI();
                 postWeatherData(weatherJsonData);
                 saveDataIntoDatabase(weatherJsonData);
@@ -115,8 +118,9 @@ public class WeatherManager {
     }
 
 
+    Gson gson = new Gson();
 
-    //TODO: Move to a background thread
+    @WorkerThread
     private void postWeatherData(String weatherJsonData){
         WeatherData weatherData = gson.fromJson(weatherJsonData, WeatherData.class);
 
@@ -143,6 +147,7 @@ public class WeatherManager {
     }
 
     private WeatherDbHelper dbHelper;
+    @WorkerThread
     private void saveDataIntoDatabase(String jsonString){
         if(dbHelper == null)
             dbHelper = new WeatherDbHelper(mContext);
@@ -166,7 +171,8 @@ public class WeatherManager {
         mDatabaseHandler = new Handler(mNetworkHandlerThread.getLooper());
     }
 
-    private void  loadDataFromDatabase(){
+    @WorkerThread
+    private void loadDataFromDatabase(){
         if(dbHelper == null)
             dbHelper = new WeatherDbHelper(mContext);
         Runnable runnable = () -> {
@@ -204,21 +210,10 @@ public class WeatherManager {
         isUIBlocked = true;
     }
 
-    private void cancelNetworkRequests(){
-        //When you want to cancel:
-        //A) go through the queued calls and cancel if the tag matches:
-        for (Call call : client.dispatcher().queuedCalls()) {
-            call.cancel();
-        }
 
-        //B) go through the running calls and cancel if the tag matches:
-        for (Call call : client.dispatcher().runningCalls()) {
-            call.cancel();
-        }
-    }
 
     public void destroy(){
-        cancelNetworkRequests();
+        mNetworkManager.destroy();
         dbHelper.close();
         mLocationManager.removeUpdates(mLocationListener);
         mNetworkHandler.removeCallbacksAndMessages(null);

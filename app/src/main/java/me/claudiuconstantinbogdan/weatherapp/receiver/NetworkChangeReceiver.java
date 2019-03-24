@@ -5,14 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
 
-import me.claudiuconstantinbogdan.weatherapp.util.NetworkUtil;
+import me.claudiuconstantinbogdan.weatherapp.util.NetworkStatusUtil;
 
 public class NetworkChangeReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
 
-        String status = NetworkUtil.getConnectivityStatusString(context);
+        String status = NetworkStatusUtil.getConnectivityStatusString(context);
 
         Toast.makeText(context, status, Toast.LENGTH_LONG).show();
     }

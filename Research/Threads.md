@@ -17,3 +17,14 @@ Source: https://blog.mindorks.com/android-core-looper-handler-and-handlerthread-
 Creating a handler from the UI thread will inherit the same thread. To create a handler from the background thread is necessary to create a HandlerThread and get its thread ( .getLooper()) when creating the handler.
 
 Source: https://stackoverflow.com/questions/18694732/run-handler-messages-in-a-background-thread
+
+## Thread annotations:
+Thread annotations check if a method is called from a specific type of thread. The following thread annotations are supported:
+
+@MainThread
+@UiThread
+@WorkerThread
+@BinderThread
+@AnyThread
+
+Source: https://developer.android.com/studio/write/annotations#thread-annotations 
