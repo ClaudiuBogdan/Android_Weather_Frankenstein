@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import me.claudiuconstantinbogdan.weatherapp.R;
+import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
 import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
 import me.claudiuconstantinbogdan.weatherapp.manager.WeatherManager;
 import me.claudiuconstantinbogdan.weatherapp.receiver.NetworkChangeReceiver;
@@ -24,7 +25,7 @@ import me.claudiuconstantinbogdan.weatherapp.receiver.NetworkChangeReceiver;
 public class MainFragment extends Fragment implements IWeatherListener {
 
     public static final String TAG = MainFragment.class.getCanonicalName();
-    private TextView textView;
+    private TextView tvTemperature, tvWeatherDescription, tvMaxTemperature, tvMinTemperature;
     private WeatherManager weatherManager;
     private NetworkChangeReceiver mNetworkReceiver;
 
@@ -48,21 +49,25 @@ public class MainFragment extends Fragment implements IWeatherListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
+        bindViews(view);
 
-        textView = view.findViewById(R.id.helloTextFragment);
         if(savedInstanceState != null){
             String weatherData = savedInstanceState.getString(weatherDataSaveKey);
-            textView.setText(weatherData);
+            tvTemperature.setText(weatherData);
         }
         setRetainInstance(true);
         return view;
+    }
+
+    private void bindViews(View view) {
+        tvTemperature = view.findViewById(R.id.tv_temperature);
     }
 
     private final String weatherDataSaveKey = "weatherDataSaveKey";
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(weatherDataSaveKey, textView.getText().toString());
+        outState.putString(weatherDataSaveKey, tvTemperature.getText().toString()); //TODO: add string
     }
 
     @Override
@@ -130,8 +135,13 @@ public class MainFragment extends Fragment implements IWeatherListener {
     }
 
     @Override
-    public void onWeatherUpdate(String weatherData) {
-        getActivity().runOnUiThread(() -> textView.setText(weatherData));
+    public void onWeatherUpdate(WeatherData weatherData) {
+        getActivity().runOnUiThread(() -> {
+
+            String s = weatherData.getLongitude() + "\n" + weatherData.getLatitude() + "\n\nMy Current City is: "
+                     + "\n" + "Temperature: " + weatherData.getCurrently().getTemperature();
+            tvTemperature.setText(weatherData.getCurrently().getTemperature() + "");
+        });
 
     }
 }

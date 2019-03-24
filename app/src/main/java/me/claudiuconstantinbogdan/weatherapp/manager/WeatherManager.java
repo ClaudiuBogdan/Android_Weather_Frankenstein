@@ -134,12 +134,7 @@ public class WeatherManager {
         catch (IOException ex){
             ex.printStackTrace();
         }
-
-
-
-        String s = weatherData.getLongitude() + "\n" + weatherData.getLatitude() + "\n\nMy Current City is: "
-                + cityName + "\n" + "Temperature: " + weatherData.getCurrently().getTemperature();
-        mWeatherListener.onWeatherUpdate(s);
+        mWeatherListener.onWeatherUpdate(weatherData);
     }
 
 
