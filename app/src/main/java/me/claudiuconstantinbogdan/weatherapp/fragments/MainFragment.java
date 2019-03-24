@@ -9,10 +9,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import me.claudiuconstantinbogdan.weatherapp.R;
 import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
@@ -21,6 +23,7 @@ import me.claudiuconstantinbogdan.weatherapp.receiver.NetworkChangeReceiver;
 
 public class MainFragment extends Fragment implements IWeatherListener {
 
+    public static final String TAG = MainFragment.class.getCanonicalName();
     private TextView textView;
     private WeatherManager weatherManager;
     private NetworkChangeReceiver mNetworkReceiver;
@@ -35,6 +38,10 @@ public class MainFragment extends Fragment implements IWeatherListener {
         weatherManager = new WeatherManager(getContext(), this);
         mNetworkReceiver = new NetworkChangeReceiver();
         getUserLocation();
+
+
+        Toast.makeText(getContext(), "Fragment created.", Toast.LENGTH_LONG).show();
+        Log.d(TAG, "MainFragment::onCreateView");
     }
 
     @Override
@@ -47,6 +54,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
             String weatherData = savedInstanceState.getString(weatherDataSaveKey);
             textView.setText(weatherData);
         }
+        setRetainInstance(true);
         return view;
     }
 
@@ -60,15 +68,19 @@ public class MainFragment extends Fragment implements IWeatherListener {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
         registerNetworkBroadcastForNougat();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        weatherManager.destroy();
         unregisterNetworkChanges();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        weatherManager.destroy();
     }
 
     private final int MY_PERMISSIONS_REQUEST_LOCATION = 101;
