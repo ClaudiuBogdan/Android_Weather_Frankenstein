@@ -28,6 +28,7 @@ import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
 import me.claudiuconstantinbogdan.weatherapp.network.WeatherService;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDataContract;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbHelper;
+import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbManager;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -43,12 +44,14 @@ public class WeatherManager {
     private LocationListener mLocationListener;
     private NetworkManager mNetworkManager;
     private WeatherService mWeatherService;
+    private WeatherDbManager mWeatherDbManager;
 
     public WeatherManager(Context context, IWeatherListener weatherListener){
         this.mContext = context;
         this.mWeatherListener = weatherListener;
         this.mNetworkManager = NetworkManager.getInstance();
         this.mWeatherService = NetworkManager.getWeatherService();
+        this.mWeatherDbManager = WeatherDbManager.getInstance(context);
     }
 
     public void initLocationListener() throws SecurityException{
@@ -106,7 +109,7 @@ public class WeatherManager {
                 String weatherJsonData = mWeatherService.getWeatherData(longitude, latitude);
                 blockDatabaseLoadToUI();
                 postWeatherData(weatherJsonData);
-                saveDataIntoDatabase(weatherJsonData);
+                mWeatherDbManager.saveDataIntoDatabase(weatherJsonData);
 
             } catch (IOException e) {
                 //Display error message
@@ -146,59 +149,20 @@ public class WeatherManager {
         mWeatherListener.onWeatherUpdate(s);
     }
 
-    private WeatherDbHelper dbHelper;
-    @WorkerThread
-    private void saveDataIntoDatabase(String jsonString){
-        if(dbHelper == null)
-            dbHelper = new WeatherDbHelper(mContext);
-        // Gets the data repository in write mode
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        dbHelper.deleteAll(db);
 
-        // Create a new map of values, where column names are the keys
-        ContentValues values = new ContentValues();
-        values.put(WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA, jsonString);
-
-        // Insert the new row, returning the primary key value of the new row
-        long newRowId = db.insert(WeatherDataContract.WeatherDataEntry.TABLE_NAME, null, values);
-    }
 
     private Handler mDatabaseHandler = null;
     private HandlerThread mDatabaseHandlerThread = null;
     public void startDatabaseHandlerThread(){
-        mDatabaseHandlerThread = new HandlerThread("HandlerThread");
+        mDatabaseHandlerThread = new HandlerThread("DatabaseHandlerThread");
         mDatabaseHandlerThread.start();
         mDatabaseHandler = new Handler(mNetworkHandlerThread.getLooper());
     }
 
     @WorkerThread
     private void loadDataFromDatabase(){
-        if(dbHelper == null)
-            dbHelper = new WeatherDbHelper(mContext);
         Runnable runnable = () -> {
-            SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-            // Define a projection that specifies which columns from the database
-            // you will actually use after this query.
-            String[] projection = {
-                    WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA
-            };
-
-
-            Cursor cursor = db.query(
-                    WeatherDataContract.WeatherDataEntry.TABLE_NAME,   // The table to query
-                    projection,             // The array of columns to return (pass null to get all)
-                    null,              // The columns for the WHERE clause
-                    null,          // The values for the WHERE clause
-                    null,                   // don't group the rows
-                    null,                   // don't filter by row groups
-                    null               // The sort order
-            );
-            cursor.moveToNext();
-
-            String data = cursor.getString(
-                    cursor.getColumnIndexOrThrow(WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA));
-            cursor.close();
+            String data = mWeatherDbManager.loadDataFromDatabase();
             if(!isUIBlocked)
                 postWeatherData(data);
         };
@@ -214,13 +178,15 @@ public class WeatherManager {
 
     public void destroy(){
         mNetworkManager.destroy();
-        dbHelper.close();
+        mWeatherDbManager.destroy();
         mLocationManager.removeUpdates(mLocationListener);
         mNetworkHandler.removeCallbacksAndMessages(null);
         mDatabaseHandler.removeCallbacksAndMessages(null);
         mNetworkHandlerThread.quit();
         mDatabaseHandlerThread.quit();
 
+        mNetworkManager = null;
+        mWeatherDbManager = null;
         mNetworkHandler = null;
         mDatabaseHandler = null;
         mNetworkHandlerThread = null;
