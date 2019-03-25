@@ -30,6 +30,7 @@ import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
 import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
 import me.claudiuconstantinbogdan.weatherapp.manager.WeatherManager;
 import me.claudiuconstantinbogdan.weatherapp.receiver.NetworkChangeReceiver;
+import me.claudiuconstantinbogdan.weatherapp.util.temperature.TemperatureUnits;
 
 public class MainFragment extends Fragment implements IWeatherListener {
 
@@ -40,6 +41,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
     private WeatherManager weatherManager;
     private NetworkChangeReceiver mNetworkReceiver;
     private WeatherData mWeatherData;
+    private TemperatureUnits temperaturFormatter;
 
     public MainFragment() {
         // Required empty public constructor
@@ -93,14 +95,34 @@ public class MainFragment extends Fragment implements IWeatherListener {
     private void changeTemperatureUnits(int checkedId){
         switch (checkedId){
             case R.id.rb_celsius:
+                temperaturFormatter = TemperatureUnits.CELSIUS;
                 Log.d("TempUnits", "Group id: " + "Celsius");
                 break;
             case R.id.rb_fahrenheit:
+                temperaturFormatter = TemperatureUnits.FAHRENHEIT;
                 Log.d("TempUnits", "Group id: " + "Fahrenheit");
                 break;
             default:
                 break;
         }
+        updateTemperatureUnits();
+
+    }
+
+    private void updateTemperatureUnits() {
+        if(mWeatherData == null)
+            return;
+        
+        CurrentWeatherData currentWeather = mWeatherData.getCurrently();
+        DailyItemWeatherData todayWeather = mWeatherData.getDaily().getData().get(0);
+
+        String currentTemp = temperaturFormatter.getFormattedTemperature(currentWeather.getTemperature());
+        String maxTemp = temperaturFormatter.getFormattedTemperature(todayWeather.getTemperatureMax());
+        String minTemp = temperaturFormatter.getFormattedTemperature(todayWeather.getTemperatureMin());
+
+        tvTemperature.setText(currentTemp);
+        tvMaxTemperature.setText(maxTemp);
+        tvMinTemperature.setText(minTemp);
 
     }
 
@@ -178,24 +200,22 @@ public class MainFragment extends Fragment implements IWeatherListener {
     @Override
     public void onWeatherUpdate(@NonNull WeatherData weatherData) {
         getActivity().runOnUiThread(() -> {
+            this.mWeatherData = weatherData;
             CurrentWeatherData currentWeather = weatherData.getCurrently();
-            DailyItemWeatherData todayWeather = weatherData.getDaily().getData().get(0);
             Date date = Calendar.getInstance().getTime();
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E dd/MM/yyyy");
             SimpleDateFormat simpleTimeFormat = new SimpleDateFormat("h:mm a");
-            String currentDate = simpleDateFormat.format(new Date());
-            String currentTime = simpleTimeFormat.format(new Date());
+            String currentDate = simpleDateFormat.format(date);
+            String currentTime = simpleTimeFormat.format(date);
 
-            this.mWeatherData = weatherData;
             tvCity.setText(weatherData.getCity());
-            tvTemperature.setText(currentWeather.getTemperature() + " °C");
             tvWeatherDescription.setText(currentWeather.getSummary());
-            tvMaxTemperature.setText(todayWeather.getTemperatureMax() + " °C");
-            tvMinTemperature.setText(todayWeather.getTemperatureMin() + " °C");
+
             tvWindSpeed.setText(currentWeather.getWindSpeed() + " km/h");
             tvWindDirection.setText(currentWeather.getWindBearing() + " °");
             tvDate.setText(currentDate);
             tvClock.setText(currentTime);
+            updateTemperatureUnits();
 
         });
 
