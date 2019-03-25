@@ -57,21 +57,6 @@ public class MainFragment extends Fragment implements IWeatherListener {
         initWeatherManager();
     }
 
-    private void initNetworkListener() {
-        mNetworkReceiver = new BroadcastReceiver(){
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                NetworkStatus status = NetworkStatusUtil.getConnectivityStatusEnum(context);
-                if(status == NetworkStatus.CONNECTED){
-                    tvNetworkDisconnected.setVisibility(View.GONE);
-                }
-                else{
-                    tvNetworkDisconnected.setVisibility(View.VISIBLE);
-                }
-            }
-        };
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -85,19 +70,6 @@ public class MainFragment extends Fragment implements IWeatherListener {
         }
         setRetainInstance(true);
         return view;
-    }
-
-    private void setLocationPermissionListener() {
-        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED )
-            tvLocationPermission.setVisibility(View.VISIBLE);
-        tvLocationPermission.setOnClickListener((view) -> {
-            initWeatherManager();
-        });
-    }
-
-    private void disableLocationPermissionListener(){
-        if(tvLocationPermission != null)
-            tvLocationPermission.setVisibility(View.GONE);
     }
 
     private void bindViews(View view) {
@@ -115,7 +87,34 @@ public class MainFragment extends Fragment implements IWeatherListener {
 
         tvNetworkDisconnected = view.findViewById(R.id.tv_network_disconnected);
         tvLocationPermission = view.findViewById(R.id.tv_location_permission);
+    }
 
+    private void initNetworkListener() {
+        mNetworkReceiver = new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                NetworkStatus status = NetworkStatusUtil.getConnectivityStatusEnum(context);
+                if(status == NetworkStatus.CONNECTED){
+                    tvNetworkDisconnected.setVisibility(View.GONE);
+                }
+                else{
+                    tvNetworkDisconnected.setVisibility(View.VISIBLE);
+                }
+            }
+        };
+    }
+
+    private void setLocationPermissionListener() {
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED )
+            tvLocationPermission.setVisibility(View.VISIBLE);
+        tvLocationPermission.setOnClickListener((view) -> {
+            initWeatherManager();
+        });
+    }
+
+    private void disableLocationPermissionListener(){
+        if(tvLocationPermission != null)
+            tvLocationPermission.setVisibility(View.GONE);
     }
 
     private void setTemperatureUnitsListener() {
@@ -139,7 +138,6 @@ public class MainFragment extends Fragment implements IWeatherListener {
                 break;
         }
         updateTemperatureUnits();
-
     }
 
     private void updateTemperatureUnits() {
@@ -158,6 +156,25 @@ public class MainFragment extends Fragment implements IWeatherListener {
         tvTemperatureUnits.setText(temperatureUnits);
         tvMaxTemperature.setText(maxTemp);
         tvMinTemperature.setText(minTemp);
+    }
+
+    @Override
+    public void onWeatherUpdate(@NonNull WeatherData weatherData) {
+        getActivity().runOnUiThread(() -> {
+            this.mWeatherData = weatherData;
+            CurrentWeatherData currentWeather = weatherData.getCurrently();
+
+            tvCity.setText(weatherData.getCity());
+            tvWeatherDescription.setText(currentWeather.getSummary());
+
+            String windDirection = "Wind direction: " + WindUtil.getWindDirection(currentWeather.getWindBearing());
+            String windSpeed = "Wind speed: " + WindUtil.getWindSpeedInMetricUnits(currentWeather.getWindSpeed());
+            tvWindSpeed.setText(windSpeed);
+            tvWindDirection.setText(windDirection);
+
+            updateTemperatureUnits();
+
+        });
     }
 
     private void displayDateAndTime(){
@@ -252,25 +269,5 @@ public class MainFragment extends Fragment implements IWeatherListener {
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void onWeatherUpdate(@NonNull WeatherData weatherData) {
-        getActivity().runOnUiThread(() -> {
-            this.mWeatherData = weatherData;
-            CurrentWeatherData currentWeather = weatherData.getCurrently();
-
-            tvCity.setText(weatherData.getCity());
-            tvWeatherDescription.setText(currentWeather.getSummary());
-
-            String windDirection = "Wind direction: " + WindUtil.getWindDirection(currentWeather.getWindBearing());
-            String windSpeed = "Wind speed: " + WindUtil.getWindSpeedInMetricUnits(currentWeather.getWindSpeed());
-            tvWindSpeed.setText(windSpeed);
-            tvWindDirection.setText(windDirection);
-
-            updateTemperatureUnits();
-
-        });
-
     }
 }

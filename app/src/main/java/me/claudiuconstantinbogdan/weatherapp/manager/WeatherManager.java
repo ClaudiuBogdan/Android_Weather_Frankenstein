@@ -1,11 +1,6 @@
 package me.claudiuconstantinbogdan.weatherapp.manager;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -13,28 +8,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.MainThread;
-import android.support.annotation.UiThread;
 import android.support.annotation.WorkerThread;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
 
 import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
 import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
 import me.claudiuconstantinbogdan.weatherapp.network.WeatherService;
-import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDataContract;
-import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbHelper;
 import me.claudiuconstantinbogdan.weatherapp.storage.WeatherDbManager;
 import me.claudiuconstantinbogdan.weatherapp.util.GeocodeUtil;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class WeatherManager {
 
@@ -114,7 +98,6 @@ public class WeatherManager {
                 e.printStackTrace();
             }
         };
-        // Start the initial runnable task by posting through the handler
         mNetworkHandler.post(runnable);
     }
 

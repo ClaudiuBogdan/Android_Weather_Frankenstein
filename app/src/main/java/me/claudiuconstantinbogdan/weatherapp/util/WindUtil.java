@@ -6,8 +6,8 @@ public abstract class WindUtil {
         return cardinals[(int)Math.round((windDegrees % 360) / 45)];
     }
 
-    public static String getWindSpeedInMetricUnits(double windSpeedinMph) {
+    public static String getWindSpeedInMetricUnits(double windSpeedInMph) {
         double conversionFactor = 1.60934;
-        return Math.round(windSpeedinMph * conversionFactor) + " km/h";
+        return Math.round(windSpeedInMph * conversionFactor) + " km/h";
     }
 }

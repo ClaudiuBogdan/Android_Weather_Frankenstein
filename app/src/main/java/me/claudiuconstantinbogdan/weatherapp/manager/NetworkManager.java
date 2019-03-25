@@ -44,13 +44,9 @@ public class NetworkManager implements WeatherService{
     }
 
     private void cancelNetworkRequests(){
-        //When you want to cancel:
-        //A) go through the queued calls and cancel if the tag matches:
         for (Call call : client.dispatcher().queuedCalls()) {
             call.cancel();
         }
-
-        //B) go through the running calls and cancel if the tag matches:
         for (Call call : client.dispatcher().runningCalls()) {
             call.cancel();
         }
