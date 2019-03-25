@@ -11,5 +11,6 @@ The app has only two external dependencies: OKHTTP for network request and GSON 
 
 Keywords: Multithreading, Networking, Local Storage, Design Patterns, MVC, OkHTTP
 
-[Imgur](https://i.imgur.com/h2uYHeZ.png)
-[Imgur](https://i.imgur.com/0DFWbSQ.png)
+![Celsius](https://i.imgur.com/h2uYHeZ.png)
+
+![Fahrenheit](https://i.imgur.com/0DFWbSQ.png)
