@@ -1,7 +1,9 @@
 package me.claudiuconstantinbogdan.weatherapp.fragments;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
@@ -11,12 +13,12 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -28,7 +30,8 @@ import me.claudiuconstantinbogdan.weatherapp.data.DailyItemWeatherData;
 import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
 import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
 import me.claudiuconstantinbogdan.weatherapp.manager.WeatherManager;
-import me.claudiuconstantinbogdan.weatherapp.receiver.NetworkChangeReceiver;
+import me.claudiuconstantinbogdan.weatherapp.util.NetworkStatus;
+import me.claudiuconstantinbogdan.weatherapp.util.NetworkStatusUtil;
 import me.claudiuconstantinbogdan.weatherapp.util.WindUtil;
 import me.claudiuconstantinbogdan.weatherapp.util.temperature.TemperatureUnits;
 
@@ -37,9 +40,10 @@ public class MainFragment extends Fragment implements IWeatherListener {
     public static final String TAG = MainFragment.class.getCanonicalName();
     private TextView tvCity, tvTemperature, tvTemperatureUnits, tvWeatherDescription, tvMaxTemperature, tvMinTemperature,
             tvWindSpeed, tvWindDirection, tvDate, tvClock;
+    private TextView tvNetworkDisconnected;
     private RadioGroup rgTemperatureUnits;
     private WeatherManager weatherManager;
-    private NetworkChangeReceiver mNetworkReceiver;
+    private BroadcastReceiver mNetworkReceiver;
     private WeatherData mWeatherData;
     private TemperatureUnits temperaturFormatter;
 
@@ -51,8 +55,23 @@ public class MainFragment extends Fragment implements IWeatherListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         weatherManager = new WeatherManager(getContext(), this);
-        mNetworkReceiver = new NetworkChangeReceiver();
-        getUserLocation();
+        initNetworkListener();
+        initWeatherManager();
+    }
+
+    private void initNetworkListener() {
+        mNetworkReceiver = new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                NetworkStatus status = NetworkStatusUtil.getConnectivityStatusEnum(context);
+                if(status == NetworkStatus.CONNECTED){
+                    tvNetworkDisconnected.setVisibility(View.GONE);
+                }
+                else{
+                    tvNetworkDisconnected.setVisibility(View.VISIBLE);
+                }
+            }
+        };
     }
 
     @Override
@@ -82,6 +101,8 @@ public class MainFragment extends Fragment implements IWeatherListener {
         tvDate = view.findViewById(R.id.tv_date);
         tvClock = view.findViewById(R.id.tv_clock);
         rgTemperatureUnits = view.findViewById(R.id.rg_temperature_units);
+
+        tvNetworkDisconnected = view.findViewById(R.id.tv_network_disconnected);
     }
 
     private void setTemperatureUnitsListener() {
@@ -163,27 +184,17 @@ public class MainFragment extends Fragment implements IWeatherListener {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        registerNetworkBroadcastForNougat();
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
+        registerNetworkBroadcastForNougat();
         initializeDateAndTime();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        destroyDateAndTime();
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
         unregisterNetworkChanges();
+        destroyDateAndTime();
     }
 
     @Override
@@ -193,7 +204,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
     }
 
     private final int MY_PERMISSIONS_REQUEST_LOCATION = 101;
-    private void getUserLocation() {
+    private void initWeatherManager() {
         if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
@@ -222,12 +233,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
     }
 
     private void registerNetworkBroadcastForNougat() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            getActivity().registerReceiver(mNetworkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getActivity().registerReceiver(mNetworkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-        }
+        getActivity().registerReceiver(mNetworkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
     protected void unregisterNetworkChanges() {

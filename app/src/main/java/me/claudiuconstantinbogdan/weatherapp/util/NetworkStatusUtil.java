@@ -38,4 +38,17 @@ public class NetworkStatusUtil {
         }
         return status;
     }
+
+    public static NetworkStatus getConnectivityStatusEnum(Context context) {
+        int conn = NetworkStatusUtil.getConnectivityStatus(context);
+        NetworkStatus status = null;
+        if (conn == NetworkStatusUtil.TYPE_WIFI) {
+            status = NetworkStatus.CONNECTED;
+        } else if (conn == NetworkStatusUtil.TYPE_MOBILE) {
+            status = NetworkStatus.CONNECTED;
+        } else if (conn == NetworkStatusUtil.TYPE_NOT_CONNECTED) {
+            status = NetworkStatus.DISCONNECTED;
+        }
+        return status;
+    }
 }
