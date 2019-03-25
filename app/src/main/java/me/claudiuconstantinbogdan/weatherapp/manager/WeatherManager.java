@@ -15,6 +15,7 @@ import android.os.HandlerThread;
 import android.support.annotation.MainThread;
 import android.support.annotation.UiThread;
 import android.support.annotation.WorkerThread;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -127,14 +128,15 @@ public class WeatherManager {
     @WorkerThread
     private void postWeatherData(String weatherJsonData){
         WeatherData weatherData = gson.fromJson(weatherJsonData, WeatherData.class);
-        String cityName = "None";
         try{
-            cityName = GeocodeUtil.getLocationName(mContext, weatherData.getLongitude(), weatherData.getLatitude());
+            String cityName = GeocodeUtil.getLocationName(mContext, weatherData.getLongitude(), weatherData.getLatitude());
+            weatherData.setCity(cityName);
         }
         catch (IOException ex){
             ex.printStackTrace();
         }
         mWeatherListener.onWeatherUpdate(weatherData);
+        Log.d("WeatherData", weatherJsonData);
     }
 
 

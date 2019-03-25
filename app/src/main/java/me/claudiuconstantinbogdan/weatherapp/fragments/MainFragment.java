@@ -18,6 +18,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import me.claudiuconstantinbogdan.weatherapp.R;
+import me.claudiuconstantinbogdan.weatherapp.data.CurrentWeatherData;
+import me.claudiuconstantinbogdan.weatherapp.data.DailyItemWeatherData;
 import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
 import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
 import me.claudiuconstantinbogdan.weatherapp.manager.WeatherManager;
@@ -26,7 +28,8 @@ import me.claudiuconstantinbogdan.weatherapp.receiver.NetworkChangeReceiver;
 public class MainFragment extends Fragment implements IWeatherListener {
 
     public static final String TAG = MainFragment.class.getCanonicalName();
-    private TextView tvTemperature, tvWeatherDescription, tvMaxTemperature, tvMinTemperature;
+    private TextView tvCity, tvTemperature, tvWeatherDescription, tvMaxTemperature, tvMinTemperature,
+            tvWindSpeed, tvWindDirection, tvDate, tvClock;
     private WeatherManager weatherManager;
     private NetworkChangeReceiver mNetworkReceiver;
     private WeatherData mWeatherData;
@@ -58,7 +61,15 @@ public class MainFragment extends Fragment implements IWeatherListener {
     }
 
     private void bindViews(View view) {
+        tvCity = view.findViewById(R.id.tv_city);
         tvTemperature = view.findViewById(R.id.tv_temperature);
+        tvWeatherDescription = view.findViewById(R.id.tv_weather_description);
+        tvMaxTemperature = view.findViewById(R.id.tv_temp_max);
+        tvMinTemperature = view.findViewById(R.id.tv_temp_min);
+        tvWindSpeed = view.findViewById(R.id.tv_wind_speed);
+        tvWindDirection = view.findViewById(R.id.tv_wind_direction);
+        tvDate = view.findViewById(R.id.tv_date);
+        tvClock = view.findViewById(R.id.tv_clock);
     }
 
     private final String weatherDataSaveKey = "weatherDataSaveKey";
@@ -135,10 +146,16 @@ public class MainFragment extends Fragment implements IWeatherListener {
     @Override
     public void onWeatherUpdate(@NonNull WeatherData weatherData) {
         getActivity().runOnUiThread(() -> {
+            CurrentWeatherData currentWeather = weatherData.getCurrently();
+            DailyItemWeatherData todayWeather = weatherData.getDaily().getData().get(0);
             this.mWeatherData = weatherData;
-            String s = weatherData.getLongitude() + "\n" + weatherData.getLatitude() + "\n\nMy Current City is: "
-                     + "\n" + "Temperature: " + weatherData.getCurrently().getTemperature();
-            tvTemperature.setText(weatherData.getCurrently().getTemperature() + "");
+            tvCity.setText(weatherData.getCity());
+            tvTemperature.setText(currentWeather.getTemperature() + " °C");
+            tvWeatherDescription.setText(currentWeather.getSummary());
+            tvMinTemperature.setText(todayWeather.getTemperatureMin() + " °C");
+            tvWindSpeed.setText(currentWeather.getWindSpeed() + " km/h");
+            tvWindDirection.setText(currentWeather.getWindBearing() + " °");
+
         });
 
     }

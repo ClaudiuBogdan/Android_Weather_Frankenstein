@@ -8,33 +8,41 @@ import java.util.List;
 public class WeatherData implements Parcelable {
 
     private double longitude;
+    private double latitude;
     private String timezone;
     private CurrentWeatherData currently;
     private HourlyWeatherData hourly;
     private DailyWeatherData daily;
     private List<AlertsWeatherData> alerts;
 
-    private double latitude;
+
+    private String city = "Nowhere";
+
+
 
     protected WeatherData(Parcel in) {
         longitude = in.readDouble();
+        latitude = in.readDouble();
         timezone = in.readString();
         currently = in.readParcelable(CurrentWeatherData.class.getClassLoader());
         hourly = in.readParcelable(HourlyWeatherData.class.getClassLoader());
         daily = in.readParcelable(DailyWeatherData.class.getClassLoader());
         alerts = in.createTypedArrayList(AlertsWeatherData.CREATOR);
-        latitude = in.readDouble();
+
+        city = in.readString();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeDouble(longitude);
+        dest.writeDouble(latitude);
         dest.writeString(timezone);
         dest.writeParcelable(currently, flags);
         dest.writeParcelable(hourly, flags);
         dest.writeParcelable(daily, flags);
         dest.writeTypedList(alerts);
-        dest.writeDouble(latitude);
+
+        dest.writeString(city);
     }
 
     @Override
@@ -108,5 +116,13 @@ public class WeatherData implements Parcelable {
 
     public void setAlerts(List<AlertsWeatherData> alerts) {
         this.alerts = alerts;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 }

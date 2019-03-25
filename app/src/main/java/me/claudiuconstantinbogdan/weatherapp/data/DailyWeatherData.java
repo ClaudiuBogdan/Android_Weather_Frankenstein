@@ -7,9 +7,23 @@ import java.util.List;
 
 public class DailyWeatherData implements Parcelable {
     private String summary;
+    private List<DailyItemWeatherData> data;
+
 
     protected DailyWeatherData(Parcel in) {
         summary = in.readString();
+        data = in.createTypedArrayList(DailyItemWeatherData.CREATOR);
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(summary);
+        dest.writeTypedList(data);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<DailyWeatherData> CREATOR = new Creator<DailyWeatherData>() {
@@ -24,16 +38,6 @@ public class DailyWeatherData implements Parcelable {
         }
     };
 
-    public List<DailyItemWeatherData> getData() {
-        return data;
-    }
-
-    public void setData(List<DailyItemWeatherData> data) {
-        this.data = data;
-    }
-
-    List<DailyItemWeatherData> data;
-
     public String getSummary() {
         return summary;
     }
@@ -42,13 +46,11 @@ public class DailyWeatherData implements Parcelable {
         this.summary = summary;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    public List<DailyItemWeatherData> getData() {
+        return data;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(summary);
+    public void setData(List<DailyItemWeatherData> data) {
+        this.data = data;
     }
 }

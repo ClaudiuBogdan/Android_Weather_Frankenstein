@@ -11,6 +11,8 @@ public class CurrentWeatherData implements Parcelable {
     private double precipProbability;
     private double temperature;
     private double apparentTemperature;
+    private double windBearing;
+    private double windSpeed;
 
     protected CurrentWeatherData(Parcel in) {
         time = in.readLong();
@@ -19,6 +21,25 @@ public class CurrentWeatherData implements Parcelable {
         precipProbability = in.readDouble();
         temperature = in.readDouble();
         apparentTemperature = in.readDouble();
+        windBearing = in.readDouble();
+        windSpeed = in.readDouble();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(time);
+        dest.writeString(summary);
+        dest.writeDouble(precipIntensity);
+        dest.writeDouble(precipProbability);
+        dest.writeDouble(temperature);
+        dest.writeDouble(apparentTemperature);
+        dest.writeDouble(windBearing);
+        dest.writeDouble(windSpeed);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<CurrentWeatherData> CREATOR = new Creator<CurrentWeatherData>() {
@@ -81,18 +102,20 @@ public class CurrentWeatherData implements Parcelable {
         this.apparentTemperature = apparentTemperature;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    public double getWindBearing() {
+        return windBearing;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(time);
-        dest.writeString(summary);
-        dest.writeDouble(precipIntensity);
-        dest.writeDouble(precipProbability);
-        dest.writeDouble(temperature);
-        dest.writeDouble(apparentTemperature);
+    public void setWindBearing(double windBearing) {
+        this.windBearing = windBearing;
     }
+
+    public double getWindSpeed() {
+        return windSpeed;
+    }
+
+    public void setWindSpeed(double windSpeed) {
+        this.windSpeed = windSpeed;
+    }
+
 }
