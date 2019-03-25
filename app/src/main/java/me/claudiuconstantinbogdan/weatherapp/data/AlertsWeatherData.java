@@ -1,12 +1,36 @@
 package me.claudiuconstantinbogdan.weatherapp.data;
 
-public class AlertsWeatherData {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class AlertsWeatherData implements Parcelable {
     private String title;
     private String[] regions;
     private String severity;
     private long time;
     private long expires;
     private String description;
+
+    protected AlertsWeatherData(Parcel in) {
+        title = in.readString();
+        regions = in.createStringArray();
+        severity = in.readString();
+        time = in.readLong();
+        expires = in.readLong();
+        description = in.readString();
+    }
+
+    public static final Creator<AlertsWeatherData> CREATOR = new Creator<AlertsWeatherData>() {
+        @Override
+        public AlertsWeatherData createFromParcel(Parcel in) {
+            return new AlertsWeatherData(in);
+        }
+
+        @Override
+        public AlertsWeatherData[] newArray(int size) {
+            return new AlertsWeatherData[size];
+        }
+    };
 
     public String getTitle() {
         return title;
@@ -54,5 +78,20 @@ public class AlertsWeatherData {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(title);
+        dest.writeStringArray(regions);
+        dest.writeString(severity);
+        dest.writeLong(time);
+        dest.writeLong(expires);
+        dest.writeString(description);
     }
 }

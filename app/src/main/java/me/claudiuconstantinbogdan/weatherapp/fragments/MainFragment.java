@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -28,6 +29,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
     private TextView tvTemperature, tvWeatherDescription, tvMaxTemperature, tvMinTemperature;
     private WeatherManager weatherManager;
     private NetworkChangeReceiver mNetworkReceiver;
+    private WeatherData mWeatherData;
 
     public MainFragment() {
         // Required empty public constructor
@@ -39,10 +41,6 @@ public class MainFragment extends Fragment implements IWeatherListener {
         weatherManager = new WeatherManager(getContext(), this);
         mNetworkReceiver = new NetworkChangeReceiver();
         getUserLocation();
-
-
-        Toast.makeText(getContext(), "Fragment created.", Toast.LENGTH_LONG).show();
-        Log.d(TAG, "MainFragment::onCreateView");
     }
 
     @Override
@@ -52,8 +50,8 @@ public class MainFragment extends Fragment implements IWeatherListener {
         bindViews(view);
 
         if(savedInstanceState != null){
-            String weatherData = savedInstanceState.getString(weatherDataSaveKey);
-            tvTemperature.setText(weatherData);
+            WeatherData weatherData = savedInstanceState.getParcelable(weatherDataSaveKey);
+            onWeatherUpdate(weatherData);
         }
         setRetainInstance(true);
         return view;
@@ -67,7 +65,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString(weatherDataSaveKey, tvTemperature.getText().toString()); //TODO: add string
+        outState.putParcelable(weatherDataSaveKey, mWeatherData);
     }
 
     @Override
@@ -135,9 +133,9 @@ public class MainFragment extends Fragment implements IWeatherListener {
     }
 
     @Override
-    public void onWeatherUpdate(WeatherData weatherData) {
+    public void onWeatherUpdate(@NonNull WeatherData weatherData) {
         getActivity().runOnUiThread(() -> {
-
+            this.mWeatherData = weatherData;
             String s = weatherData.getLongitude() + "\n" + weatherData.getLatitude() + "\n\nMy Current City is: "
                      + "\n" + "Temperature: " + weatherData.getCurrently().getTemperature();
             tvTemperature.setText(weatherData.getCurrently().getTemperature() + "");

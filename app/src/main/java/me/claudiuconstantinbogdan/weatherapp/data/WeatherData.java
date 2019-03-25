@@ -1,8 +1,11 @@
 package me.claudiuconstantinbogdan.weatherapp.data;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.List;
 
-public class WeatherData {
+public class WeatherData implements Parcelable {
 
     private double longitude;
     private String timezone;
@@ -12,6 +15,44 @@ public class WeatherData {
     private List<AlertsWeatherData> alerts;
 
     private double latitude;
+
+    protected WeatherData(Parcel in) {
+        longitude = in.readDouble();
+        timezone = in.readString();
+        currently = in.readParcelable(CurrentWeatherData.class.getClassLoader());
+        hourly = in.readParcelable(HourlyWeatherData.class.getClassLoader());
+        daily = in.readParcelable(DailyWeatherData.class.getClassLoader());
+        alerts = in.createTypedArrayList(AlertsWeatherData.CREATOR);
+        latitude = in.readDouble();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeDouble(longitude);
+        dest.writeString(timezone);
+        dest.writeParcelable(currently, flags);
+        dest.writeParcelable(hourly, flags);
+        dest.writeParcelable(daily, flags);
+        dest.writeTypedList(alerts);
+        dest.writeDouble(latitude);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<WeatherData> CREATOR = new Creator<WeatherData>() {
+        @Override
+        public WeatherData createFromParcel(Parcel in) {
+            return new WeatherData(in);
+        }
+
+        @Override
+        public WeatherData[] newArray(int size) {
+            return new WeatherData[size];
+        }
+    };
 
     public double getLatitude() {
         return latitude;
