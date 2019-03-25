@@ -10,3 +10,8 @@ To offer a good UX, the app saves the network request into the database so it wi
 The app has only two external dependencies: OKHTTP for network request and GSON for JSON parser.
 
 ## Keywords: Multithreading, Networking, Local Storage, Design Patterns, MVC, OkHTTP
+
+![Celsius](https://i.imgur.com/h2uYHeZ.png)
+
+![Fahrenheit](https://i.imgur.com/0DFWbSQ.png)
+
