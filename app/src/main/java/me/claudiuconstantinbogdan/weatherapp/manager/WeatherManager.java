@@ -73,10 +73,6 @@ public class WeatherManager {
         @MainThread
         @Override
         public void onLocationChanged(Location loc) {
-            Toast.makeText(
-                    mContext,
-                    "Location changed: Lat: " + loc.getLatitude() + " Lng: "
-                            + loc.getLongitude(), Toast.LENGTH_SHORT).show();
             double longitude = loc.getLongitude();
             double latitude = loc.getLatitude();
 
@@ -152,7 +148,7 @@ public class WeatherManager {
     private void loadDataFromDatabase(){
         Runnable runnable = () -> {
             String data = mWeatherDbManager.loadDataFromDatabase();
-            if(!isUIBlocked)
+            if(!isUIBlocked && data != null)
                 postWeatherData(data);
         };
         mDatabaseHandler.post(runnable);

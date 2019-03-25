@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -18,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -40,12 +38,12 @@ public class MainFragment extends Fragment implements IWeatherListener {
     public static final String TAG = MainFragment.class.getCanonicalName();
     private TextView tvCity, tvTemperature, tvTemperatureUnits, tvWeatherDescription, tvMaxTemperature, tvMinTemperature,
             tvWindSpeed, tvWindDirection, tvDate, tvClock;
-    private TextView tvNetworkDisconnected;
+    private TextView tvNetworkDisconnected, tvLocationPermission;
     private RadioGroup rgTemperatureUnits;
     private WeatherManager weatherManager;
     private BroadcastReceiver mNetworkReceiver;
     private WeatherData mWeatherData;
-    private TemperatureUnits temperaturFormatter;
+    private TemperatureUnits temperatureFormatter;
 
     public MainFragment() {
         // Required empty public constructor
@@ -80,13 +78,26 @@ public class MainFragment extends Fragment implements IWeatherListener {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         bindViews(view);
         setTemperatureUnitsListener();
-
+        setLocationPermissionListener();
         if(savedInstanceState != null){
             WeatherData weatherData = savedInstanceState.getParcelable(weatherDataSaveKey);
             onWeatherUpdate(weatherData);
         }
         setRetainInstance(true);
         return view;
+    }
+
+    private void setLocationPermissionListener() {
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED )
+            tvLocationPermission.setVisibility(View.VISIBLE);
+        tvLocationPermission.setOnClickListener((view) -> {
+            initWeatherManager();
+        });
+    }
+
+    private void disableLocationPermissionListener(){
+        if(tvLocationPermission != null)
+            tvLocationPermission.setVisibility(View.GONE);
     }
 
     private void bindViews(View view) {
@@ -103,6 +114,8 @@ public class MainFragment extends Fragment implements IWeatherListener {
         rgTemperatureUnits = view.findViewById(R.id.rg_temperature_units);
 
         tvNetworkDisconnected = view.findViewById(R.id.tv_network_disconnected);
+        tvLocationPermission = view.findViewById(R.id.tv_location_permission);
+
     }
 
     private void setTemperatureUnitsListener() {
@@ -117,10 +130,10 @@ public class MainFragment extends Fragment implements IWeatherListener {
     private void changeTemperatureUnits(int checkedId){
         switch (checkedId){
             case R.id.rb_celsius:
-                temperaturFormatter = TemperatureUnits.CELSIUS;
+                temperatureFormatter = TemperatureUnits.CELSIUS;
                 break;
             case R.id.rb_fahrenheit:
-                temperaturFormatter = TemperatureUnits.FAHRENHEIT;
+                temperatureFormatter = TemperatureUnits.FAHRENHEIT;
                 break;
             default:
                 break;
@@ -136,10 +149,10 @@ public class MainFragment extends Fragment implements IWeatherListener {
         CurrentWeatherData currentWeather = mWeatherData.getCurrently();
         DailyItemWeatherData todayWeather = mWeatherData.getDaily().getData().get(0);
 
-        String currentTemp = temperaturFormatter.getConvertedTemperature(currentWeather.getTemperature());
-        String temperatureUnits = temperaturFormatter.getTemperatureUnits();
-        String maxTemp = "Max: " + temperaturFormatter.getFormattedTemperature(todayWeather.getTemperatureMax());
-        String minTemp = "Min: " + temperaturFormatter.getFormattedTemperature(todayWeather.getTemperatureMin());
+        String currentTemp = temperatureFormatter.getConvertedTemperature(currentWeather.getTemperature());
+        String temperatureUnits = temperatureFormatter.getTemperatureUnits();
+        String maxTemp = "Max: " + temperatureFormatter.getFormattedTemperature(todayWeather.getTemperatureMax());
+        String minTemp = "Min: " + temperatureFormatter.getFormattedTemperature(todayWeather.getTemperatureMin());
 
         tvTemperature.setText(currentTemp);
         tvTemperatureUnits.setText(temperatureUnits);
@@ -206,12 +219,12 @@ public class MainFragment extends Fragment implements IWeatherListener {
     private final int MY_PERMISSIONS_REQUEST_LOCATION = 101;
     private void initWeatherManager() {
         if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     MY_PERMISSIONS_REQUEST_LOCATION);
             return;
         }
         weatherManager.initLocationListener();
+        disableLocationPermissionListener();
     }
 
     @Override
@@ -222,10 +235,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    weatherManager.initLocationListener();
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
+                    initWeatherManager();
                 }
                 return;
             }

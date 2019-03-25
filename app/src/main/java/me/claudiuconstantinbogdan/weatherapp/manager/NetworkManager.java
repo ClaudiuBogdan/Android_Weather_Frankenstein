@@ -16,6 +16,7 @@ public class NetworkManager implements WeatherService{
 
     private static NetworkManager mInstance;
     private OkHttpClient client = new OkHttpClient();
+    private String baseWeatherUrl = "https://api.darksky.net/forecast/2bb07c3bece89caf533ac9a5d23d8417/";
 
     private NetworkManager(){}
 
@@ -32,7 +33,7 @@ public class NetworkManager implements WeatherService{
     @Override
     @WorkerThread
     public String getWeatherData(double longitude, double latitude) throws IOException{
-        String url = "https://api.darksky.net/forecast/2bb07c3bece89caf533ac9a5d23d8417/" + longitude +"," + latitude;
+        String url = baseWeatherUrl + longitude +"," + latitude;
         Request request = new Request.Builder()
                 .url(url)
                 .build();

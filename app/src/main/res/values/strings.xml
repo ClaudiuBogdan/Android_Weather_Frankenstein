@@ -6,4 +6,6 @@
 
     <string name="fahrenheit">°F</string>
     <string name="celsius">°C</string>
+    <string name="internetDisconnected">No Internet connection</string>
+    <string name="locationPermission">Grant location permission</string>
 </resources>

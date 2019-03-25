@@ -57,9 +57,9 @@ public class WeatherDbManager {
                 null,                   // don't filter by row groups
                 null               // The sort order
         );
-        cursor.moveToNext();
-
-        String data = cursor.getString(
+        String data = null;
+        if(cursor.moveToNext())
+            data = cursor.getString(
                 cursor.getColumnIndexOrThrow(WeatherDataContract.WeatherDataEntry.COLUMN_NAME_ROW_DATA));
         cursor.close();
         return data;
