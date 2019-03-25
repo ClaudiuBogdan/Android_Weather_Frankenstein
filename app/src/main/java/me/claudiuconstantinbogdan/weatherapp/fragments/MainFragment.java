@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +36,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
     public static final String TAG = MainFragment.class.getCanonicalName();
     private TextView tvCity, tvTemperature, tvWeatherDescription, tvMaxTemperature, tvMinTemperature,
             tvWindSpeed, tvWindDirection, tvDate, tvClock;
+    private RadioGroup rgTemperatureUnits;
     private WeatherManager weatherManager;
     private NetworkChangeReceiver mNetworkReceiver;
     private WeatherData mWeatherData;
@@ -56,6 +58,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         bindViews(view);
+        setTemperatureUnitsListener();
 
         if(savedInstanceState != null){
             WeatherData weatherData = savedInstanceState.getParcelable(weatherDataSaveKey);
@@ -75,6 +78,30 @@ public class MainFragment extends Fragment implements IWeatherListener {
         tvWindDirection = view.findViewById(R.id.tv_wind_direction);
         tvDate = view.findViewById(R.id.tv_date);
         tvClock = view.findViewById(R.id.tv_clock);
+        rgTemperatureUnits = view.findViewById(R.id.rg_temperature_units);
+    }
+
+    private void setTemperatureUnitsListener() {
+        int initialCheckedId = rgTemperatureUnits.getCheckedRadioButtonId();
+        changeTemperatureUnits(initialCheckedId);
+
+        rgTemperatureUnits.setOnCheckedChangeListener((group, checkedId) -> {
+            changeTemperatureUnits(checkedId);
+        });
+    }
+
+    private void changeTemperatureUnits(int checkedId){
+        switch (checkedId){
+            case R.id.rb_celsius:
+                Log.d("TempUnits", "Group id: " + "Celsius");
+                break;
+            case R.id.rb_fahrenheit:
+                Log.d("TempUnits", "Group id: " + "Fahrenheit");
+                break;
+            default:
+                break;
+        }
+
     }
 
     private final String weatherDataSaveKey = "weatherDataSaveKey";

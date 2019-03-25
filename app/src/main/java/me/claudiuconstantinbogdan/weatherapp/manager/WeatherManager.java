@@ -136,7 +136,6 @@ public class WeatherManager {
             ex.printStackTrace();
         }
         mWeatherListener.onWeatherUpdate(weatherData);
-        Log.d("WeatherData", weatherJsonData);
     }
 
 

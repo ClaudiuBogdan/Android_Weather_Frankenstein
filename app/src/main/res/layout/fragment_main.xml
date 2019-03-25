@@ -162,4 +162,32 @@
     </android.support.constraint.ConstraintLayout>
 
 
+    <RadioGroup
+        android:id="@+id/rg_temperature_units"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+
+        <RadioButton
+            android:id="@+id/rb_celsius"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/celsius"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/rb_fahrenheit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/fahrenheit" />
+
+    </RadioGroup>
+
+
 </android.support.constraint.ConstraintLayout>
