@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -34,7 +35,7 @@ import me.claudiuconstantinbogdan.weatherapp.util.temperature.TemperatureUnits;
 public class MainFragment extends Fragment implements IWeatherListener {
 
     public static final String TAG = MainFragment.class.getCanonicalName();
-    private TextView tvCity, tvTemperature, tvWeatherDescription, tvMaxTemperature, tvMinTemperature,
+    private TextView tvCity, tvTemperature, tvTemperatureUnits, tvWeatherDescription, tvMaxTemperature, tvMinTemperature,
             tvWindSpeed, tvWindDirection, tvDate, tvClock;
     private RadioGroup rgTemperatureUnits;
     private WeatherManager weatherManager;
@@ -72,6 +73,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
     private void bindViews(View view) {
         tvCity = view.findViewById(R.id.tv_city);
         tvTemperature = view.findViewById(R.id.tv_temperature);
+        tvTemperatureUnits = view.findViewById(R.id.tv_temp_units);
         tvWeatherDescription = view.findViewById(R.id.tv_weather_description);
         tvMaxTemperature = view.findViewById(R.id.tv_temp_max);
         tvMinTemperature = view.findViewById(R.id.tv_temp_min);
@@ -95,11 +97,9 @@ public class MainFragment extends Fragment implements IWeatherListener {
         switch (checkedId){
             case R.id.rb_celsius:
                 temperaturFormatter = TemperatureUnits.CELSIUS;
-                Log.d("TempUnits", "Group id: " + "Celsius");
                 break;
             case R.id.rb_fahrenheit:
                 temperaturFormatter = TemperatureUnits.FAHRENHEIT;
-                Log.d("TempUnits", "Group id: " + "Fahrenheit");
                 break;
             default:
                 break;
@@ -115,14 +115,44 @@ public class MainFragment extends Fragment implements IWeatherListener {
         CurrentWeatherData currentWeather = mWeatherData.getCurrently();
         DailyItemWeatherData todayWeather = mWeatherData.getDaily().getData().get(0);
 
-        String currentTemp = temperaturFormatter.getFormattedTemperature(currentWeather.getTemperature());
-        String maxTemp = temperaturFormatter.getFormattedTemperature(todayWeather.getTemperatureMax());
-        String minTemp = temperaturFormatter.getFormattedTemperature(todayWeather.getTemperatureMin());
+        String currentTemp = temperaturFormatter.getConvertedTemperature(currentWeather.getTemperature());
+        String temperatureUnits = temperaturFormatter.getTemperatureUnits();
+        String maxTemp = "Max: " + temperaturFormatter.getFormattedTemperature(todayWeather.getTemperatureMax());
+        String minTemp = "Min: " + temperaturFormatter.getFormattedTemperature(todayWeather.getTemperatureMin());
 
         tvTemperature.setText(currentTemp);
+        tvTemperatureUnits.setText(temperatureUnits);
         tvMaxTemperature.setText(maxTemp);
         tvMinTemperature.setText(minTemp);
+    }
 
+    private void displayDateAndTime(){
+        Date date = Calendar.getInstance().getTime();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E dd/MM/yyyy");
+        SimpleDateFormat simpleTimeFormat = new SimpleDateFormat("h:mm a");
+        String currentDate = simpleDateFormat.format(date);
+        String currentTime = simpleTimeFormat.format(date);
+        tvDate.setText(currentDate);
+        tvClock.setText(currentTime);
+    }
+
+    private Handler dateHandler = new Handler();
+    private Runnable dateRunnable;
+    private void initializeDateAndTime(){
+        dateRunnable = () -> {
+            displayDateAndTime();
+
+            int elapsedSeconds = Calendar.getInstance().get(Calendar.SECOND);
+            int totalSecond = 60;
+            long updateInterval = (totalSecond - elapsedSeconds) * 1000;
+            dateHandler.postDelayed(dateRunnable, updateInterval);
+        };
+        dateHandler.post(dateRunnable);
+    }
+
+    private void destroyDateAndTime(){
+    if(dateRunnable != null)
+        dateHandler.removeCallbacks(dateRunnable);
     }
 
     private final String weatherDataSaveKey = "weatherDataSaveKey";
@@ -136,6 +166,18 @@ public class MainFragment extends Fragment implements IWeatherListener {
     public void onAttach(Context context) {
         super.onAttach(context);
         registerNetworkBroadcastForNougat();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        initializeDateAndTime();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        destroyDateAndTime();
     }
 
     @Override
@@ -201,19 +243,12 @@ public class MainFragment extends Fragment implements IWeatherListener {
         getActivity().runOnUiThread(() -> {
             this.mWeatherData = weatherData;
             CurrentWeatherData currentWeather = weatherData.getCurrently();
-            Date date = Calendar.getInstance().getTime();
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E dd/MM/yyyy");
-            SimpleDateFormat simpleTimeFormat = new SimpleDateFormat("h:mm a");
-            String currentDate = simpleDateFormat.format(date);
-            String currentTime = simpleTimeFormat.format(date);
-            tvDate.setText(currentDate);
-            tvClock.setText(currentTime);
 
             tvCity.setText(weatherData.getCity());
             tvWeatherDescription.setText(currentWeather.getSummary());
 
-            String windDirection = WindUtil.getWindDirection(currentWeather.getWindBearing());
-            String windSpeed = WindUtil.getWindSpeedInMetricUnits(currentWeather.getWindSpeed());
+            String windDirection = "Wind direction: " + WindUtil.getWindDirection(currentWeather.getWindBearing());
+            String windSpeed = "Wind speed: " + WindUtil.getWindSpeedInMetricUnits(currentWeather.getWindSpeed());
             tvWindSpeed.setText(windSpeed);
             tvWindDirection.setText(windDirection);
 

@@ -8,6 +8,6 @@ public class FahrenheitConverter implements TemperatureConverter {
 
     @Override
     public String getTemperatureUnits() {
-        return " °F";
+        return "°F";
     }
 }

@@ -10,8 +10,14 @@ public enum TemperatureUnits {
     }
 
     public String getFormattedTemperature(double fahrenheitTemperature) {
-        return temperatureConverter.convertTemperature(fahrenheitTemperature) +
-                temperatureConverter.getTemperatureUnits();
+        return temperatureConverter.convertTemperature(fahrenheitTemperature) + " " + temperatureConverter.getTemperatureUnits();
     }
 
+    public String getConvertedTemperature(double fahrenheitTemperature){
+        return temperatureConverter.convertTemperature(fahrenheitTemperature) + "";
+    }
+
+    public String getTemperatureUnits() {
+        return temperatureConverter.getTemperatureUnits();
+    }
 }

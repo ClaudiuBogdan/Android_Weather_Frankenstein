@@ -10,6 +10,6 @@ public class CelsiusConverter implements TemperatureConverter {
 
     @Override
     public String getTemperatureUnits() {
-        return " °C";
+        return "°C";
     }
 }
