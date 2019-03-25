@@ -16,12 +16,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 
 import me.claudiuconstantinbogdan.weatherapp.R;
 import me.claudiuconstantinbogdan.weatherapp.data.CurrentWeatherData;
@@ -30,6 +28,7 @@ import me.claudiuconstantinbogdan.weatherapp.data.WeatherData;
 import me.claudiuconstantinbogdan.weatherapp.events.IWeatherListener;
 import me.claudiuconstantinbogdan.weatherapp.manager.WeatherManager;
 import me.claudiuconstantinbogdan.weatherapp.receiver.NetworkChangeReceiver;
+import me.claudiuconstantinbogdan.weatherapp.util.WindUtil;
 import me.claudiuconstantinbogdan.weatherapp.util.temperature.TemperatureUnits;
 
 public class MainFragment extends Fragment implements IWeatherListener {
@@ -112,7 +111,7 @@ public class MainFragment extends Fragment implements IWeatherListener {
     private void updateTemperatureUnits() {
         if(mWeatherData == null)
             return;
-        
+
         CurrentWeatherData currentWeather = mWeatherData.getCurrently();
         DailyItemWeatherData todayWeather = mWeatherData.getDaily().getData().get(0);
 
@@ -207,14 +206,17 @@ public class MainFragment extends Fragment implements IWeatherListener {
             SimpleDateFormat simpleTimeFormat = new SimpleDateFormat("h:mm a");
             String currentDate = simpleDateFormat.format(date);
             String currentTime = simpleTimeFormat.format(date);
+            tvDate.setText(currentDate);
+            tvClock.setText(currentTime);
 
             tvCity.setText(weatherData.getCity());
             tvWeatherDescription.setText(currentWeather.getSummary());
 
-            tvWindSpeed.setText(currentWeather.getWindSpeed() + " km/h");
-            tvWindDirection.setText(currentWeather.getWindBearing() + " °");
-            tvDate.setText(currentDate);
-            tvClock.setText(currentTime);
+            String windDirection = WindUtil.getWindDirection(currentWeather.getWindBearing());
+            String windSpeed = WindUtil.getWindSpeedInMetricUnits(currentWeather.getWindSpeed());
+            tvWindSpeed.setText(windSpeed);
+            tvWindDirection.setText(windDirection);
+
             updateTemperatureUnits();
 
         });
