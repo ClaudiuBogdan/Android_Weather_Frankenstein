@@ -17,6 +17,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+
 import me.claudiuconstantinbogdan.weatherapp.R;
 import me.claudiuconstantinbogdan.weatherapp.data.CurrentWeatherData;
 import me.claudiuconstantinbogdan.weatherapp.data.DailyItemWeatherData;
@@ -148,13 +153,22 @@ public class MainFragment extends Fragment implements IWeatherListener {
         getActivity().runOnUiThread(() -> {
             CurrentWeatherData currentWeather = weatherData.getCurrently();
             DailyItemWeatherData todayWeather = weatherData.getDaily().getData().get(0);
+            Date date = Calendar.getInstance().getTime();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("E dd/MM/yyyy");
+            SimpleDateFormat simpleTimeFormat = new SimpleDateFormat("h:mm a");
+            String currentDate = simpleDateFormat.format(new Date());
+            String currentTime = simpleTimeFormat.format(new Date());
+
             this.mWeatherData = weatherData;
             tvCity.setText(weatherData.getCity());
             tvTemperature.setText(currentWeather.getTemperature() + " °C");
             tvWeatherDescription.setText(currentWeather.getSummary());
+            tvMaxTemperature.setText(todayWeather.getTemperatureMax() + " °C");
             tvMinTemperature.setText(todayWeather.getTemperatureMin() + " °C");
             tvWindSpeed.setText(currentWeather.getWindSpeed() + " km/h");
             tvWindDirection.setText(currentWeather.getWindBearing() + " °");
+            tvDate.setText(currentDate);
+            tvClock.setText(currentTime);
 
         });
 
